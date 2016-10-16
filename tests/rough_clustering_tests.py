@@ -15,13 +15,11 @@ University of California, School of Information and Computer Science.
 #Externals
 import json
 from collections import Counter
-
 import matplotlib.pyplot as plt
 import numpy as npy
 from scipy.cluster.vq import kmeans2
 
 from code import roughCluster
-
 
 # Set some rough clustering parameters
 maxD = 20			# if None, maxD will be determined by algorithm
