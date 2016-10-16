@@ -55,4 +55,4 @@
     A Comparison of k-means and Rough Clustering Approaches"
 
 #### License ####
-* [MIT License](LICENSE.md)
+* [MIT License](LICENSE)
