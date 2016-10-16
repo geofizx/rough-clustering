@@ -53,3 +53,6 @@
 
     Voges, Pope & Brown, 2002, "Cluster Analysis of Marketing Data Examining On-line Shopping Orientation:
     A Comparison of k-means and Rough Clustering Approaches"
+
+#### License ####
+* [MIT License](LICENSE.md)
