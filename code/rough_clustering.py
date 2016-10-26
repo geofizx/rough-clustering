@@ -28,7 +28,8 @@ from collections import Counter
 import numpy as npy
 from copy import deepcopy
 
-class roughCluster():
+
+class roughCluster:
 
 	def __init__(self,input_data,max_clusters,objective="ratio",max_d=None):
 

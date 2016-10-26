@@ -1,4 +1,4 @@
-# Rough Clustering
+# Python Implementation of Rough Clustering
 
 ###Description
     This algorithm clusters multi-dimensional feature sets with N number of instances (entities) based on an
@@ -42,6 +42,9 @@
     /tests/rough_clustering_tests.py - example usage and tests for known 2-class clustering problem in UCI Statlog Data
     set for credit risk
 
+    /tests/rough_kmeans_tests.py - example usage and tests for known 2-class clustering problem in UCI Statlog Data
+    set for credit risk
+
 ####Test Data Notes
 
     In these tests, resulting cluster mean and std deviations from centroids are compared to kmeans and true class
@@ -53,3 +56,7 @@
 
     Voges, Pope & Brown, 2002, "Cluster Analysis of Marketing Data Examining On-line Shopping Orientation:
     A Comparison of k-means and Rough Clustering Approaches"
+
+    Lingras & Peter, 2012, Applying Rough Set Concepts to Clustering, in G. Peters et al. (eds.), Rough Sets: Selected
+    Methods and Applications in Management and Engineering, Advanced Information and Knowledge Processing,
+    DOI 10.1007/978-1-4471-2760-4_2, Springer-Verlag London Limited.
