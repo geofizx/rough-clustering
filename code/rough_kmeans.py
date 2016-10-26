@@ -156,7 +156,7 @@ class RoughKMeans:
 
         t1 = time.time()
 
-        # Enumerate centroid distance vector for all entities
+        # Enumerate centroid distance vector for all entities and find nearest cluster
         for k in range(0,self.data_length):
             self.distance[str(k)] = {str(j): np.linalg.norm([abs(self.data[val][k]-self.centroids[j][val])
                                                              for val in self.feature_names])
@@ -165,16 +165,16 @@ class RoughKMeans:
             self.cluster_list[str(k)] = np.argmin(list(itertools.chain([self.distance[str(k)][j]
                                                                         for j in self.distance[str(k)]])))
 
-        if self.debug is True:
-            print "Cluster List",self.cluster_list
-            print "Distances",self.distance[str(k)]
+            if self.debug is True:
+                print "Cluster List",self.cluster_list[str(k)]
+                print "Distances",self.distance[str(k)]
 
-        # Get all distances for determining self.dist_threshold
+        # Determine self.dist_threshold based on percentile all entity-cluster distances
         curr_dists = list(itertools.chain([self.distance[h][g] for h in self.distance for g in self.distance[h]]))
-        # Determine dist_threshold based on 25th percentile of all entity-cluster distances
-        self.dist_threshold = int(max([np.percentile(curr_dists,25),3]))
+        self.dist_threshold = int(np.percentile(curr_dists,25))
 
         if self.debug is True:
+            print "Current Distances",curr_dists
             print "Distance Threshold",self.dist_threshold
 
         #
@@ -184,12 +184,6 @@ class RoughKMeans:
         #
 
         t2 = time.time()
-        # if self.debug is True:
-        #     print "time",t2-t1
-        #     print "Total Entities to Cluster:", self.total_entities
-        #     print "Input Feature Length",len(header)
-        #     print "Max Intra-Entity Distance to Cluster:",self.maxD
-        #     print "Min Intra-Entity Distance to Cluster:",self.minD
 
         return
 
@@ -199,6 +193,7 @@ if __name__ == "__main__":
     For class-level tests see /tests/rough_clustering_tests.py
     """
 
+    # Some tiny unit tests to be pushed to /tests/ as well later
     data = {"test1":[0.1,2.0,3.0],"test2":[0.5,3.1,0.1],"test3":[2.1,2.3,3.1]}
     clstr = RoughKMeans(data,2)
     clstr.get_rough_clusters()
