@@ -140,15 +140,19 @@ class RoughKMeans:
 
     def get_cluster_upper_lower_approximation(self):
 
+        """
+        Compute modified rough cluster upper/lower approximations for all current clusters
 
-        pass
+        :return: self.upper_approx, self.lower_approx : for each cluster
+        """
+        T = {j: d(v, xj) / d(v, xi) ≤ threshold and i = j}
 
         return
 
     def get_entity_centroid_distances(self):
 
         """
-        Compute modified rough entity-centroid distance for all cluster centroids given their upper/lower approximations
+        Compute entity-cluster distances and find nearest cluster for each entity
 
         uses self.data
         :return: self.distance : centroid-entity distance vectors for all candidate clusters
