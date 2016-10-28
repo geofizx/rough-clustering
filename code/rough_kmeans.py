@@ -42,6 +42,7 @@ class RoughKMeans:
         self.data_length = len(self.data[self.feature_names[0]])
         self.centroids = {}
         self.cluster_list = {}
+        self.groups = {}                    # dictionary containing keys for clusters and lists of all entities in key
         self.distance = {}
 
         # Rough sets vars
@@ -227,6 +228,7 @@ class RoughKMeans:
         t1 = time.time()
 
         # Enumerate centroid distance vector for all entities and find nearest cluster and assign
+        self.groups = {str(k): [] for k in range(self.max_clusters)}
         for k in range(0,self.data_length):
             self.distance[str(k)] = {str(j): np.linalg.norm([abs(self.data[val][k]-self.centroids[str(j)][val])
                                                              for val in self.feature_names])
@@ -234,6 +236,7 @@ class RoughKMeans:
 
             best_key = min(self.distance[str(k)].iteritems(), key=operator.itemgetter(1))[0]
             self.cluster_list[str(k)] = best_key
+            self.groups[best_key].append(k)
 
         if self.debug_dist is True:
             print "Cluster List",self.cluster_list
@@ -265,7 +268,7 @@ if __name__ == "__main__":
     from scipy.cluster.vq import kmeans2
 
     # Some tiny unit tests to be pushed to /tests/ as well later
-    data = {"test1":[1.0,1.0,2.1],"test2":[2.0,2.01,2.3],"test3":[3.,3.,3.1]}
+    data = {"test1": [1.0,1.0,2.1],"test2": [2.0,2.01,2.3],"test3": [3.,3.,3.1]}
     datav = np.asarray([data["test1"],data["test2"],data["test3"]])
     print datav.T
     print "Data input",datav.shape
