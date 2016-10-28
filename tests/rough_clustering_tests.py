@@ -13,13 +13,14 @@ University of California, School of Information and Computer Science.
 """
 
 #Externals
+import time
 import json
 from collections import Counter
 import matplotlib.pyplot as plt
 import numpy as npy
 from scipy.cluster.vq import kmeans2
 
-from code import roughCluster
+from code import RoughCluster,RoughKMeans
 
 # Set some rough clustering parameters
 maxD = 20			# if None, maxD will be determined by algorithm
@@ -34,27 +35,36 @@ print data.keys()
 header = []
 data2 = {}
 for key in data["payload"].keys():
-	header.append(key)
-	try:
-		data2[key] = [int(data["payload"][key][m]) for m in range(0,len(data["payload"][key]))]
-		if key == "amount":
-			data2[key] = []
-			for n in range(len(data["payload"][key])):
-				bins = [0,1500,3000,8000,20000]
-				for i,val in enumerate(bins[0:-1]):
-					if (int(data["payload"][key][n])) >= val and (int(data["payload"][key][n]) < bins[i+1]):
-						data2[key].append(i+1)
-	except:
-		data2[key] = []
-		encoding = {key : m for m,key in enumerate(Counter(data["payload"][key]).keys())}
-		for n in range(len(data["payload"][key])):
-			data2[key].append(encoding[data["payload"][key][n]])
+    header.append(key)
+    try:
+        data2[key] = [int(data["payload"][key][m]) for m in range(0,len(data["payload"][key]))]
+        if key == "amount":
+            data2[key] = []
+            for n in range(len(data["payload"][key])):
+                bins = [0,1500,3000,8000,20000]
+                for i,val in enumerate(bins[0:-1]):
+                    if (int(data["payload"][key][n])) >= val and (int(data["payload"][key][n]) < bins[i+1]):
+                        data2[key].append(i+1)
+    except:
+        data2[key] = []
+        encoding = {key : m for m,key in enumerate(Counter(data["payload"][key]).keys())}
+        for n in range(len(data["payload"][key])):
+            data2[key].append(encoding[data["payload"][key][n]])
 
 # Instantiate and run rough clustering
-clust = roughCluster(data2,max_clusters,"ratio",maxD)
-clust.getEntityDistances()
-clust.enumerateClusters()
-clust.pruneClusters(optimize=True)
+t1 = time.time()
+clust = RoughCluster(data2,max_clusters,"ratio",maxD)
+clust.get_entity_distances()
+clust.enumerate_clusters()
+clust.prune_clusters(optimize=True)
+t2 = time.time()
+print "Rough Set Clustering Took: ",t2-t1," secs"
+
+# Run rough kmeans as well
+clstrk = RoughKMeans(data2,2,0.75,0.25,1.1)
+clstrk.get_rough_clusters()
+t3 = time.time()
+print "Rough Kmeans Clustering Took: ",t3-t2," secs"
 
 # Compare results with known centroid mean and std deviations as well as those from k-means
 # Print stats for members of clusters
@@ -66,9 +76,9 @@ tableau_lists = []
 tableau_1 = []
 tableau_2 = []
 for key in header:
-	tableau_lists.append(data2[key][:])
-	tableau_1.append(npy.asarray(data2[key])[list1].tolist())
-	tableau_2.append(npy.asarray(data2[key])[list2].tolist())
+    tableau_lists.append(data2[key][:])
+    tableau_1.append(npy.asarray(data2[key])[list1].tolist())
+    tableau_2.append(npy.asarray(data2[key])[list2].tolist())
 datav = npy.asfarray(tableau_lists).T
 data1 = npy.asarray(tableau_1).T
 data3 = npy.asarray(tableau_2).T
@@ -83,16 +93,15 @@ std2 = npy.std(data3,axis=0)
 meank = [[] for g in range(2)]
 val = [[] for n in range(len(groups))]
 for m in range(len(groups)):
-	for n in range(2):
-		if groups[m] == n:
-			val[n].append(data["response"][m])
-			meank[n].append(datav[int(val[n][-1]),:])
+    for n in range(2):
+        if groups[m] == n:
+            val[n].append(data["response"][m])
+            meank[n].append(datav[int(val[n][-1]),:])
 meankp = []
 stddevk = []
 for n in range(2):
-	#print Counter(val[n])
-	meankp.append(npy.mean(meank[n],axis=0))
-	stddevk.append(npy.std(meank[n],axis=0))
+    meankp.append(npy.mean(meank[n],axis=0))
+    stddevk.append(npy.std(meank[n],axis=0))
 
 # Compile stats for rough clusters and plot results with known class statistics and kmeans results
 resultsm = []
@@ -114,19 +123,21 @@ print "Optimal Intra-Entity Distance",clust.opt_d
 markers = ['bv','rv','gv','kv']
 ct = 0
 for key in clust.pruned[key1]["cluster_list"][max_clusters]:
-	datav2 = []
-	meant = []
-	stdt = []
-	for val in clust.pruned[key1]["cluster_list"][max_clusters][key]:
-		meant.append(data["response"][int(val)])
-		datav2.append(datav[int(val),:])
-	tmp = npy.mean(npy.asarray(datav2),axis=0)
-	tmp2 = npy.std(npy.asarray(datav2),axis=0)
-	axs.errorbar(ranger,tmp,fmt=markers[ct],yerr=tmp2,label="Rough Cluster D="+str(key1)+" Cluster:"+str(key))
-	resultsm.append(npy.mean(npy.asarray(datav2),axis=0))
-	resultss.append(npy.std((npy.asarray(datav2)),axis=0))
-	print key1,key,len(meant),Counter(meant)
-	ct += 1
+    datav2 = []
+    meant = []
+    stdt = []
+    for val in clust.pruned[key1]["cluster_list"][max_clusters][key]:
+        meant.append(data["response"][int(val)])
+        datav2.append(datav[int(val),:])
+    tmp = npy.mean(npy.asarray(datav2),axis=0)
+    tmp2 = npy.std(npy.asarray(datav2),axis=0)
+    axs.errorbar(ranger,tmp,fmt=markers[ct],yerr=tmp2,label="Rough Cluster D="+str(key1)+" Cluster:"+str(key))
+    resultsm.append(npy.mean(npy.asarray(datav2),axis=0))
+    resultss.append(npy.std((npy.asarray(datav2)),axis=0))
+    print key1,key,len(meant),Counter(meant)
+    ct += 1
+print "kmeans groups",len([i for i in groups if i == 0]),len([i for i in groups if i == 1])
+print "Rough kmeans groups",Counter(clstrk.cluster_list)
 plt.axis([0,20,-2,7])
 plt.xlabel("Feature Number",fontsize=14)
 plt.ylabel("Centroid Mean +- Std Dev.",fontsize=14)
