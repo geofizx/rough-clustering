@@ -38,6 +38,7 @@ class RoughKMeans:
 
         # Clustering vars
         self.data = input_data
+        self.data_array = None
         self.feature_names = input_data.keys()
         self.data_length = len(self.data[self.feature_names[0]])
         self.centroids = {}
@@ -62,7 +63,7 @@ class RoughKMeans:
         self.dist_threshold = threshold     # Threshold for clusters to be considered similar distances (0.0=conventional kmeans)
 
         # Overhead
-        self.debug = False                   # Debug flag for class
+        self.debug = False                  # Debug flag for class
         self.debug_assign = False           # Debug flag for assign_cluster_upper_lower_approximation method
         self.debug_dist = False             # Debug flag for get_entity_centroid_distances method
         self.debug_update = False            # Debug flag for update_centroids method
@@ -70,39 +71,53 @@ class RoughKMeans:
         self.large = 1.0e+10
         self.tolerance = 1.0e-03            # Tolerance for stopping iterative clustering
 
+    def transform_data(self):
+        """
+        Convert input data dictionary to nd-array for accelerated clustering speed
+        :return: self.data_array
+        """
+
+        tableau_lists = [self.data[key][:] for key in self.data]
+        self.data_array = np.asfarray(tableau_lists).T
+
+        print "shape",self.data_array.shape
+
     def get_rough_clusters(self):
 
         """
         Run iterative clustering solver for rough k-means and return max_cluster rough clusters
         :return: self. centroids, self.assignments, self.upper_approximation, self.lower_approximation
         """
+        print "features", len(self.feature_names), self.data_length
 
         # Get initial random entity clusters
         self.initialize_centroids()
 
         # Iterate until centroid convergence
+        ct = 0
         stop_flag = False
         while stop_flag is False:
 
             # Back-store centroids
             prev_centroids = deepcopy(self.centroids)
-            print "Initializing centroids",prev_centroids
-
+            if self.debug is True:
+                print "Initializing centroids",prev_centroids
+            print "Done initializing Clusters"
             if self.dist_threshold <= 1.0:
                 print "Rough distance threshold set <= 1.0 and will produce conventional k-means solution"
 
             # Get entity-cluster distances
             self.get_entity_centroid_distances()
-
+            print "Done with Distances",ct
             # Compute upper and lower approximations
             self.assign_cluster_upper_lower_approximation()
-
+            print "Done assigning approximations", ct
             # Update centroids with upper and lower approximations
             self.update_centroids()
-
+            print "Done updating centroids", ct
             # Recompute centroid error
             stop_flag = self.get_centroid_convergence(prev_centroids)
-
+            ct += 1
         print "Convergence Reached"
 
         return

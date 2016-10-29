@@ -61,7 +61,7 @@ t2 = time.time()
 print "Rough Set Clustering Took: ",t2-t1," secs"
 
 # Run rough kmeans as well
-clstrk = RoughKMeans(data2,2,0.75,0.25,1.25)
+clstrk = RoughKMeans(data2,2,0.75,0.25,1.3)
 clstrk.get_rough_clusters()
 t3 = time.time()
 print "Rough Kmeans Clustering Took: ",t3-t2," secs"
@@ -138,6 +138,10 @@ for key in clust.pruned[key1]["cluster_list"][max_clusters]:
     ct += 1
 print "kmeans groups",len([i for i in groups if i == 0]),len([i for i in groups if i == 1])
 print "Rough kmeans groups",len(clstrk.groups['0']),len(clstrk.groups['1'])
+print len(set(clstrk.groups['0']).intersection(set(list1)))
+print len(set(clstrk.groups['1']).intersection(set(list2)))
+print len(set(clstrk.groups['0']).intersection(set(list2)))
+print len(set(clstrk.groups['1']).intersection(set(list1)))
 plt.axis([0,20,-2,7])
 plt.xlabel("Feature Number",fontsize=14)
 plt.ylabel("Centroid Mean +- Std Dev.",fontsize=14)
