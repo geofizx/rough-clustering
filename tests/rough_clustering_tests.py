@@ -61,11 +61,11 @@ t2 = time.time()
 print "Rough Set Clustering Took: ",t2-t1," secs"
 
 # Run rough kmeans as well
-clstrk = RoughKMeans(data2,2,0.75,0.25,1.3)
+clstrk = RoughKMeans(data2,2,0.75,0.25,1.2)
 clstrk.get_rough_clusters()
 t3 = time.time()
 print "Rough Kmeans Clustering Took: ",t3-t2," secs"
-
+print "rough kmeans",clstrk.centroids
 # Compare results with known centroid mean and std deviations as well as those from k-means
 # Print stats for members of clusters
 # Determine labels from known classes for "good" and "bad" credit risk
@@ -90,6 +90,7 @@ std2 = npy.std(data3,axis=0)
 
 # Just run k-means to compare centroid mean and std deviations
 [centroids,groups] = kmeans2(datav,2,iter=20)
+print "kmeans",centroids
 meank = [[] for g in range(2)]
 val = [[] for n in range(len(groups))]
 for m in range(len(groups)):
