@@ -55,7 +55,6 @@ class RoughKMeans:
         self.centroids = {}
         self.centroids_array = {}
         self.cluster_list = {}
-        self.groups = {}                    # dictionary containing keys for clusters and lists of all entities in key
         self.distance = {}
         self.all_keys = {}
         self.clusters = None
@@ -307,15 +306,12 @@ class RoughKMeans:
         :var self.centroids_array : numpy nd-array of all centroid features for all candidate clusters
         :var self.max_clusters
         :return: self.distance : centroid-entity distance vectors for all candidate clusters
-        :return self.groups : cluster-entity assignment lists for all candidate clusters
         :return self.cluster_list : best fit cluster - entity assignment lists
         """
 
         t1 = time.time()
 
         # Enumerate centroid distance vector for all entities and find nearest cluster and assign
-        self.groups = {str(k): [] for k in range(self.max_clusters)}
-
         # distance1 = {}
         # for k in range(0,self.data_length):
         #     distance1[str(k)] = {str(j): np.linalg.norm([abs(self.data[val][k]-self.centroids[str(j)][val])
@@ -324,7 +320,6 @@ class RoughKMeans:
         #
         #     best_key = min(distance1[str(k)].iteritems(), key=operator.itemgetter(1))[0]
         #     self.cluster_list[str(k)] = best_key
-        #     self.groups[best_key].append(k)
         # t2 = time.time()
 
         tmp = []
@@ -335,7 +330,6 @@ class RoughKMeans:
             self.distance[str(k)] = {str(j): tmp[j][k] for j in range(self.max_clusters)}
             best_key = min(self.distance[str(k)].iteritems(), key=operator.itemgetter(1))[0]
             self.cluster_list[str(k)] = best_key
-            self.groups[best_key].append(k)
 
         if self.debug_dist is True:
             print "Cluster List",self.cluster_list

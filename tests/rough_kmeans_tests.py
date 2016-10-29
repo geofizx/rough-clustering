@@ -4,21 +4,18 @@
 """
 Some unit tests and usage examples for rough_clustering class
 
-@data UCI Statlog Data Set:
-Lichman, M. (2013). UCI Machine Learning Repository [http://archive.ics.uci.edu/ml]. Irvine, CA:
-University of California, School of Information and Computer Science.
-
 @author Michael Tompkins
 @copyright 2016
 """
 
-#Externals
+# Externals
 import time
 import json
 from sys import argv
 from collections import Counter
 from copy import deepcopy
 
+# Package level imports from /code
 from code import RoughKMeans
 
 try:
@@ -44,12 +41,10 @@ try:
 except Exception as e:
     raise Exception('One or more of your input files are absent for unreadable')
 
-# print data1["data_set"]['phone_carrier_338']
-print data1["response"][resp_key2].keys()
 print "Counts", Counter(data1["response"][resp_key2]["target"])
 topN = 50  # topN most similar users
 
-# Set userid to be row number
+# Set user_id to be row number
 user_id = [k for k in range(len(data1["response"][resp_key2]["target"]))]
 fraud_users = [k for k in user_id if data1["response"][resp_key2]["target"][k] == 1]
 num_users = len(fraud_users)
@@ -65,20 +60,21 @@ for key1 in DPA["feature_names"]:
 list1 = [i for i in range(len(data2["response"])) if data2["response"][i] == 0]
 list2 = [i for i in range(len(data2["response"])) if data2["response"][i] == 1]
 
+# Run rough K means
 t2 = time.time()
-# Run rough kmeans as well
 clstrk = RoughKMeans(data2,2,0.75,0.25,1.5)
 clstrk.get_rough_clusters()
 t3 = time.time()
 print "Rough Kmeans Clustering Took: ",t3-t2," secs"
-#print "kmeans groups",len([i for i in groups if i == 0]),len([i for i in groups if i == 1])
-print "Rough kmeans groups",len(clstrk.groups['0']),len(clstrk.groups['1'])
-print "Cluster 0 vs Target 0",len(set(clstrk.groups['0']).intersection(set(list1)))
-print "Cluster 1 vs Target 1",len(set(clstrk.groups['1']).intersection(set(list2)))
-print "Cluster 0 vs Target 1",len(set(clstrk.groups['0']).intersection(set(list2)))
-print "Cluster 1 vs Target 0",len(set(clstrk.groups['1']).intersection(set(list1)))
+print "Totals Group 0",len(clstrk.clusters['0']["lower"]),len(clstrk.clusters['0']["upper"])
+print "Totals Group 1",len(clstrk.clusters['1']["lower"]),len(clstrk.clusters['1']["upper"])
 
 print "Lower 0 vs Target 0",len(set(clstrk.clusters['0']["lower"]).intersection(set(list1)))
 print "Lower 1 vs Target 1",len(set(clstrk.clusters['1']["lower"]).intersection(set(list2)))
 print "Lower 0 vs Target 1",len(set(clstrk.clusters['0']["lower"]).intersection(set(list2)))
 print "Lower 1 vs Target 0",len(set(clstrk.clusters['1']["lower"]).intersection(set(list1)))
+
+print "Upper 0 vs Target 0",len(set(clstrk.clusters['0']["upper"]).intersection(set(list1)))
+print "Upper 1 vs Target 1",len(set(clstrk.clusters['1']["upper"]).intersection(set(list2)))
+print "Upper 0 vs Target 1",len(set(clstrk.clusters['0']["upper"]).intersection(set(list2)))
+print "Upper 1 vs Target 0",len(set(clstrk.clusters['1']["upper"]).intersection(set(list1)))

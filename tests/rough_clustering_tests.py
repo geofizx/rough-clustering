@@ -136,12 +136,13 @@ for key in clust.pruned[key1]["cluster_list"][max_clusters]:
     resultss.append(npy.std((npy.asarray(datav2)),axis=0))
     print key1,key,len(meant),Counter(meant)
     ct += 1
+
 print "kmeans groups",len([i for i in groups if i == 0]),len([i for i in groups if i == 1])
-print "Rough kmeans groups",len(clstrk.groups['0']),len(clstrk.groups['1'])
-print "Cluster 0 vs Target 0",len(set(clstrk.groups['0']).intersection(set(list1)))
-print "Cluster 1 vs Target 1",len(set(clstrk.groups['1']).intersection(set(list2)))
-print "Cluster 0 vs Target 1",len(set(clstrk.groups['0']).intersection(set(list2)))
-print "Cluster 1 vs Target 0",len(set(clstrk.groups['1']).intersection(set(list1)))
+print "Rough kmeans groups",len(clstrk.clusters['0']["upper"]),len(clstrk.clusters['1']["upper"])
+print "Cluster 0 vs Target 0",len(set(clstrk.clusters['0']["upper"]).intersection(set(list1)))
+print "Cluster 1 vs Target 1",len(set(clstrk.clusters['1']["upper"]).intersection(set(list2)))
+print "Cluster 0 vs Target 1",len(set(clstrk.clusters['0']["upper"]).intersection(set(list2)))
+print "Cluster 1 vs Target 0",len(set(clstrk.clusters['1']["upper"]).intersection(set(list1)))
 
 plt.axis([0,20,-2,7])
 plt.xlabel("Feature Number",fontsize=14)
