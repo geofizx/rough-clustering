@@ -18,11 +18,8 @@ import json
 from sys import argv
 from collections import Counter
 from copy import deepcopy
-import matplotlib.pyplot as plt
-import numpy as npy
-from scipy.cluster.vq import kmeans2
 
-from code import RoughCluster,RoughKMeans
+from code import RoughKMeans
 
 try:
     # Load data from file
@@ -76,7 +73,12 @@ t3 = time.time()
 print "Rough Kmeans Clustering Took: ",t3-t2," secs"
 #print "kmeans groups",len([i for i in groups if i == 0]),len([i for i in groups if i == 1])
 print "Rough kmeans groups",len(clstrk.groups['0']),len(clstrk.groups['1'])
-print len(set(clstrk.groups['0']).intersection(set(list1)))
-print len(set(clstrk.groups['1']).intersection(set(list2)))
-print len(set(clstrk.groups['0']).intersection(set(list2)))
-print len(set(clstrk.groups['1']).intersection(set(list1)))
+print "Cluster 0 vs Target 0",len(set(clstrk.groups['0']).intersection(set(list1)))
+print "Cluster 1 vs Target 1",len(set(clstrk.groups['1']).intersection(set(list2)))
+print "Cluster 0 vs Target 1",len(set(clstrk.groups['0']).intersection(set(list2)))
+print "Cluster 1 vs Target 0",len(set(clstrk.groups['1']).intersection(set(list1)))
+
+print "Lower 0 vs Target 0",len(set(clstrk.clusters['0']["lower"]).intersection(set(list1)))
+print "Lower 1 vs Target 1",len(set(clstrk.clusters['1']["lower"]).intersection(set(list2)))
+print "Lower 0 vs Target 1",len(set(clstrk.clusters['0']["lower"]).intersection(set(list2)))
+print "Lower 1 vs Target 0",len(set(clstrk.clusters['1']["lower"]).intersection(set(list1)))
