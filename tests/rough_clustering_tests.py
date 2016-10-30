@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 """
-Some unit tests and usage examples for rough_clustering class
+Some unit tests and usage examples for rough set clustering class
 
 @data UCI Statlog Data Set:
 Lichman, M. (2013). UCI Machine Learning Repository [http://archive.ics.uci.edu/ml]. Irvine, CA:
@@ -12,7 +12,7 @@ University of California, School of Information and Computer Science.
 @copyright 2016
 """
 
-#Externals
+# Externals
 import time
 import json
 from collections import Counter
@@ -20,11 +20,12 @@ import matplotlib.pyplot as plt
 import numpy as npy
 from scipy.cluster.vq import kmeans2
 
+# Package level imports from /code
 from code import RoughCluster,RoughKMeans
 
 # Set some rough clustering parameters
 maxD = 20			# if None, maxD will be determined by algorithm
-max_clusters = 2	# Number of clusters to return
+max_clusters = 2    # Number of clusters to return
 
 # Load some data
 file2 = open("german_all.json","r")

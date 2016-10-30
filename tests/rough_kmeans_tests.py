@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 """
-Some unit tests and usage examples for rough_clustering class
+Some unit tests and usage examples for rough kmeans clustering class
 
 @author Michael Tompkins
 @copyright 2016
