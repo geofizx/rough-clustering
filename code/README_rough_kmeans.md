@@ -45,7 +45,8 @@
 
 ####Usage
 
-    /tests/rough_kmeans_tests.py - example usage and tests for known 4-class clustering problem
+    /tests/rough_kmeans_tests.py - example usage and tests for known 2-class clustering problem
+    /tests/rough_kmeans_iris.py - example usage and tests for known 3-class UCI Iris Data Set clustering problem
 
 ####Test Data Notes
 

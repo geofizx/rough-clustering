@@ -63,7 +63,7 @@ list2 = [i for i in range(len(data2["response"])) if data2["response"][i] == 1]
 
 # Run rough K means
 t2 = time.time()
-clstrk = RoughKMeans(data2,4,wght_lower=.95,wght_upper=0.05,threshold=1.25)
+clstrk = RoughKMeans(data2,3,wght_lower=0.9,wght_upper=0.1,threshold=1.2)
 clstrk.get_rough_clusters()
 t3 = time.time()
 

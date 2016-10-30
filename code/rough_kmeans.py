@@ -232,25 +232,16 @@ class RoughKMeans:
 
             if len(self.clusters[k]["lower"]) == len(self.clusters[k]["upper"]):
                 # Get lower approximation vectors
-                #lower = np.asarray([[self.data[i][j] for i in self.feature_names] for j in self.clusters[k]["lower"]])
-                #self.centroids[str(k)] = {v: np.mean(lower[:,p]) for p, v in enumerate(self.feature_names)}
                 lower = self.data_array[self.clusters[k]["lower"], :]
                 self.centroids[str(k)] = np.mean(lower,axis=0)
 
             elif len(self.clusters[k]["lower"]) == 0 and len(self.clusters[k]["upper"]) != 0:
                 # Get upper approximation vectors
-                #upper = np.asarray([[self.data[i][j] for i in self.feature_names] for j in self.clusters[k]["upper"]])
-                #self.centroids[str(k)] = {v: np.mean(upper[:,p]) for p, v in enumerate(self.feature_names)}
                 upper = self.data_array[self.clusters[k]["upper"], :]
                 self.centroids[str(k)] = np.mean(upper,axis=0)
 
             else:
-                # Get both upper and lower approximation vectors
-                #upper = np.asarray([[self.data[i][j] for i in self.feature_names] for j in self.clusters[k]["upper"]])
-                #lower = np.asarray([[self.data[i][j] for i in self.feature_names] for j in self.clusters[k]["lower"]])
-                # self.centroids[str(k)] = {v: self.wght_lower*np.mean(lower[:,p],axis=0) +
-                #                         self.wght_upper*np.mean(upper[:,p],axis=0)
-                #                         for p, v in enumerate(self.feature_names)}
+                # Get both upper-exclusive and lower approximation sets
                 # upper = self.data_array[self.clusters[k]["upper"], :]
                 lower = self.data_array[self.clusters[k]["lower"], :]
                 exclusive_set = list(set(self.clusters[k]["upper"]).difference(set(self.clusters[k]["lower"])))
