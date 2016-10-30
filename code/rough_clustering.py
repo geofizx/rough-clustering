@@ -2,14 +2,15 @@
 # encoding: utf-8
 
 """
-An implementation of rough clustering for multi-dimensional integer features
+@description
+An implementation of rough set clustering for multi-dimensional integer features
 
 @options
 max_clusters - integer corresponding to number of clusters to return
 max_d - Maximum inter-entity distance to consider before stopping further clustering
 if max_d is not specified, then algorithm determines max_d based on inter-entity distance statistics (25th percentile)
 
-@note
+@notes
 The algorithm determines the optimal distance D for final clustering based on option 'objective' which maximizes :
     "lower" : sum of lower approximations - maximum entity uniqueness across all clusters at distance D
     "coverage" : total # of entites covered by all clusters - maximum number of entities across all clusters at distance D
