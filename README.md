@@ -1,8 +1,8 @@
 # Python Implementations of Clustering Using Rough Sets
 
 ###Description
-    Rough clustering for integer features - See README_rough_sets
-    Rough k-means clustering for float features - See README_rough_kmeans
+    Rough clustering for integer features - See /code/README_rough_sets
+    Rough k-means clustering for float features - See /code/README_rough_kmeans
 
 ####Input
 
