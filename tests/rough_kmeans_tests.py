@@ -42,7 +42,6 @@ except Exception as e:
     raise Exception('One or more of your input files are absent for unreadable')
 
 print "Counts", Counter(data1["response"][resp_key2]["target"])
-topN = 50  # topN most similar users
 
 # Set user_id to be row number
 user_id = [k for k in range(len(data1["response"][resp_key2]["target"]))]
@@ -64,7 +63,7 @@ list2 = [i for i in range(len(data2["response"])) if data2["response"][i] == 1]
 
 # Run rough K means
 t2 = time.time()
-clstrk = RoughKMeans(data2,6,wght_lower=0.75,wght_upper=0.25,threshold=1.25)
+clstrk = RoughKMeans(data2,4,wght_lower=0.95,wght_upper=0.05,threshold=1.2)
 clstrk.get_rough_clusters()
 t3 = time.time()
 
