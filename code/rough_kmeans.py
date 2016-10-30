@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 """
+@description
 An implementation of rough k-means clustering for multi-dimensional numerical features. This extends conventional k-means
 to rough set theory by inclusion of upper and lower approximations in both entity-cluster distance measures and
 cluster centroid computations.
@@ -16,16 +17,15 @@ DOI 10.1007/978-1-4471-2760-4_2, Springer-Verlag London Limited, 2012.
         self.wght_upper = wght_upper        # Relative weight of upper approximation to each rough cluster centroid
         self.dist_threshold = None          # Threshold for clusters to be considered similar distances
 
-@note
-
+@notes
 Distance threshold option:
     self.dist_threshold = 1.25 by default (entity assigned to all centroids within 25% of the optimal cluster distance)
     if self.dist_threshold is set <=1.0 conventional kmeans clusters will be returned
 
     The larger self.dist_threshold the more rough (entity overlap) will exist across all k clusters returned
 
-wght_upper and wght_lower options:
-    SUM(wght_lower,wght_upper) must equal 1.0
+Lower and Upper Approximation Weight options:
+    SUM(wght_lower,wght_upper) must equal 1.0, else it will be set to defaults on execution
 
     wght_lower=0.75 by default
     wght_upper=0.25 by default
@@ -74,7 +74,7 @@ class RoughKMeans:
         self.clusters = None                # upper and lower approximation membership for all returned clusters
 
         # Overhead
-        self.timing = True                 # Timing print statements flag
+        self.timing = True                  # Timing print statements flag
         self.debug = False                  # Debug flag for entire class print statements
         self.debug_assign = False           # Debug flag for assign_cluster_upper_lower_approximation method
         self.debug_dist = False             # Debug flag for get_entity_centroid_distances method
@@ -182,6 +182,7 @@ class RoughKMeans:
         """
         Convergence test. Determine if centroids have changed, if so, return False, else True
 
+        :arg previous_centroids : back stored values for last iterate centroids
         :var self.centroids
         :var self.feature_names
         :var self.tolerance
@@ -190,14 +191,14 @@ class RoughKMeans:
 
         t1 = time.time()
 
-        #centroid_error = np.sum([[abs(self.centroids[k][val] - previous_centroids[k][val]) for k in self.centroids]
+        # centroid_error = np.sum([[abs(self.centroids[k][val] - previous_centroids[k][val]) for k in self.centroids]
         #                           for val in self.feature_names])
 
         centroid_error = np.sum([np.linalg.norm(self.centroids[k] - previous_centroids[k]) for k in self.centroids])
 
         if self.timing is True:
             t3 = time.time()
-            print "get_centroid_convergence Time",t3-t1
+            print "get_centroid_convergence Time",t3-t1, " with error:",centroid_error
 
         if self.debug is True:
             print "Centroid change", centroid_error
@@ -266,7 +267,7 @@ class RoughKMeans:
     def assign_cluster_upper_lower_approximation(self):
 
         """
-        Compute entity-to-cluster assignments + upper/lower approximations for all current clusters
+        Compute entity-to-cluster optimal assignments + upper/lower approximations for all current clusters
 
         :var self.distance
         :var self.distance_threshold
@@ -353,12 +354,6 @@ class RoughKMeans:
         # Determine self.dist_threshold based on percentile all entity-cluster distances
         # curr_dists = list(itertools.chain([self.distance[h][g] for h in self.distance for g in self.distance[h]]))
         # self.dist_threshold = np.percentile(curr_dists,50)
-
-        #
-        # self.all_keys = {str(key) : None for key in range(0,data_length)}	# Static all entity keys
-        # curr_keys = {str(key) : None for key in range(0,data_length)}		# Place holder entity keys
-        # self.total_entities = len(curr_keys.keys())
-        #
 
         if self.timing is True:
             t3 = time.time()
