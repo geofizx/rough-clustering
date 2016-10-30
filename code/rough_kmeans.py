@@ -251,9 +251,11 @@ class RoughKMeans:
                 # self.centroids[str(k)] = {v: self.wght_lower*np.mean(lower[:,p],axis=0) +
                 #                         self.wght_upper*np.mean(upper[:,p],axis=0)
                 #                         for p, v in enumerate(self.feature_names)}
-                upper = self.data_array[self.clusters[k]["upper"], :]
+                # upper = self.data_array[self.clusters[k]["upper"], :]
                 lower = self.data_array[self.clusters[k]["lower"], :]
-                self.centroids[str(k)] = self.wght_lower*np.mean(lower,axis=0) + self.wght_upper*np.mean(upper,axis=0)
+                exclusive_set = list(set(self.clusters[k]["upper"]).difference(set(self.clusters[k]["lower"])))
+                boundary = self.data_array[exclusive_set, :]
+                self.centroids[str(k)] = self.wght_lower*np.mean(lower,axis=0) + self.wght_upper*np.mean(boundary,axis=0)
 
             if self.debug_update is True:
                 print """###Cluster""", k, self.clusters[k]["lower"], self.clusters[k]["upper"]
