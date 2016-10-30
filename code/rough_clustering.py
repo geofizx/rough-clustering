@@ -20,7 +20,7 @@ The algorithm determines the optimal distance D for final clustering based on op
 @copyright 2016
 """
 
-#Externals
+# Externals
 import time
 import itertools
 import operator
@@ -33,7 +33,7 @@ class RoughCluster:
 
     def __init__(self,input_data,max_clusters,objective="ratio",max_d=None):
 
-        # Clustering output vars
+        # Rough set clustering output vars
         self.data = input_data
         self.distance = {}
         self.all_keys = {}
@@ -49,7 +49,7 @@ class RoughCluster:
         self.debug = False
         self.small = 1.0e-10
 
-        # Clustering options
+        # Rough set clustering options
         self.minD = None					# Minimum inter-entity distance to perform clustering over
         self.maxD = max_d					# Maximum inter-entity distance to perform clustering over
         self.objective = objective			# Objective to maximize for optimal clustering distance D
@@ -60,8 +60,12 @@ class RoughCluster:
         """
         Compute inter-entity distance matrix for all unique entities in input
 
-        uses self.data
+        :var self.data
         :return: self.distance : inter-entity distances for all unique (lower traingular) pairs of entities
+        :return self.all_keys
+        :return self.total_entities
+        :return self.minD
+        :return self.maxD (if maxD = None from init method)
         """
 
         header = self.data.keys()
@@ -71,17 +75,16 @@ class RoughCluster:
 
         # Enumerate entire distance matrix
         for k in range(0,data_length):
-            self.distance[str(k)] = {str(j) : sum([abs(self.data[val][k]-self.data[val][j]) for val in header])
+            self.distance[str(k)] = {str(j): sum([abs(self.data[val][k]-self.data[val][j]) for val in header])
                                         for j in range(0,data_length)}
 
         curr_dists = list(itertools.chain([self.distance[h][g] for h in self.distance for g in self.distance[h]]))
         self.minD = int(max([npy.percentile(curr_dists,2),2]))
-        if self.maxD is None:	# Determine maxD based on 25th percentile of all inter-cluster distances
+        if self.maxD is None:   # Determine maxD based on 25th percentile of all inter-cluster distances
             self.maxD = int(max([npy.percentile(curr_dists,25),3]))
 
-
-        self.all_keys = {str(key) : None for key in range(0,data_length)}	# Static all entity keys
-        curr_keys = {str(key) : None for key in range(0,data_length)}		# Place holder entity keys
+        self.all_keys = {str(key): None for key in range(0,data_length)}    # Static all entity keys
+        curr_keys = {str(key): None for key in range(0,data_length)}		# Place holder entity keys
         self.total_entities = len(curr_keys.keys())
 
         # Compute distance of all pairs (p,q) where p != q
@@ -107,6 +110,8 @@ class RoughCluster:
         """
         Method to enumerate rough clusters given distance measure between all pairs of input entities
 
+        :var self.distance
+        :var self.all_keys
         :return : self.sum_lower - lower approximation for each cluster at each distance D
         :return : self.sum_upper - upper approximation for each cluster at each distance D
         :return : self.cluster_list - list of all entities in clusters at each distance D
@@ -183,6 +188,9 @@ class RoughCluster:
         """
         Maximize objective over all distances D [self.minD : self.maxD] to determine optimal distance clustering
 
+        :var self.pruned
+        :var self.minD
+        :var self.maxD
         :return: self.opt_d : optimal integer distance D
         """
 
@@ -216,8 +224,8 @@ class RoughCluster:
         from all maxD clusters returned by enumerate_clusters()
 
         :arg (optional) cluster_name : if supplied only run for given cluster_name key in self.clusters
-        uses self.clusters : dictionary return of enumerate_clusters() containing rough clusters and upper/lower approximation sums
-        uses self.total_entities : total number of entities to be clustered
+        :var self.clusters : dictionary return of enumerate_clusters() containing rough clusters and upper/lower approximation sums
+        :var self.total_entities : total number of entities to be clustered
         :return pruned : dictionary containing N clusters that maximize upper approximation
         """
 
