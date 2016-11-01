@@ -20,10 +20,18 @@
     In rough k-means, the entity membership of the Boundary Region (shared entities across clusters) of each cluster is
     determined based on a distance threshold, dt, as:
 
+        For any entity c_i, let T be the set {clusters x_j for any j where || c_i - x_j || <= dt}
 
+        if T != {0}, for all x_j in T, c_i will be assigned to their upper approximation
+        else, x_i is assigned to the lower and upper approximation of its optimal cluster
 
     Furthermore, optimal cluster centroids take in to account both upper and lower approximations by the relation:
 
+        centroid(x_i) = wght_lower * (A_sub(x_i))/|A_sub(x_i)| +
+                        wght_upper * (A_sup(x_i) - A_sub(x_i))/|A_sup(x_i) - A_sub(x_i)|
+
+        where wght_lower and wght_upper are the relative importance (wght_lower + wght_upper == 1) of lower versus
+        upper approximations (default=0.75,0.25, respectively).
 
     The resulting optimal clusters can then be tuned based on three parameters above, upper_weight, lower_weight, and dt.
     If dt is chosen to be 1.0, then the rough k-means solution will match that of conventional k-means. As dt is increased,

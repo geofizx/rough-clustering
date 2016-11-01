@@ -42,7 +42,7 @@ list2 = [i for i in range(len(targets)) if targets[i] == 2]
 
 # Run rough K means
 t2 = time.time()
-clstrk = RoughKMeans(data2["data_set"],3,wght_lower=0.7,wght_upper=0.3,threshold=1.01)
+clstrk = RoughKMeans(data2["data_set"],3,wght_lower=0.9,wght_upper=0.1,threshold=1.0,p_param=1.,wght=False)
 clstrk.get_rough_clusters()
 t3 = time.time()
 
@@ -57,5 +57,5 @@ for i in range(clstrk.max_clusters):
     print "Lower vs Target 2",len(set(clstrk.clusters[clt1]["lower"]).intersection(set(list2)))
 
     print "Upper vs Target 0",len(set(clstrk.clusters[clt1]["upper"]).intersection(set(list0)))
-    print "Upper vs Target 1",len(set(clstrk.clusters[clt1]["upper"]).intersection(set(list2)))
+    print "Upper vs Target 1",len(set(clstrk.clusters[clt1]["upper"]).intersection(set(list1)))
     print "Upper vs Target 2", len(set(clstrk.clusters[clt1]["upper"]).intersection(set(list2)))
