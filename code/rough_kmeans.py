@@ -51,9 +51,10 @@ class RoughKMeans:
     def __init__(self,input_data,max_clusters,wght_lower=0.75,wght_upper=0.25,threshold=1.25,p_param=1.0,wght=False):
 
         # Rough clustering options
+        self.normalize = False              # Option to Z-score normalize features
         self.max_clusters = max_clusters    # Number of clusters to return
         self.dist_threshold = threshold     # <=1.0 Threshold for centroids to be deemed indiscernible (1.0 == Kmeans)
-        self.tolerance = 1.0e-02             # Tolerance for stopping iterative clustering
+        self.tolerance = 1.0e-04            # Tolerance for stopping iterative clustering
         self.wght_lower = wght_lower        # Relative weight of lower approximation for each rough cluster centroid
         self.wght_upper = wght_upper        # Relative weight of upper approximation to each rough cluster centroid
         self.p_param = p_param              # parameter for weighted distance centroid option
@@ -148,6 +149,14 @@ class RoughKMeans:
 
         tableau_lists = [self.data[key][:] for key in self.data]
         self.data_array = np.asfarray(tableau_lists).T
+
+        # Normalize if requested
+        if self.normalize is True:
+            self.data_array -= np.mean(self.data_array, axis=0)
+            tmp_std = np.std(self.data_array, axis=0)
+            for i in range(len(self.data_array[0, :])):
+                if tmp_std[i] >= 0.001:
+                    self.data_array[:, i] /= tmp_std[i]
 
         if self.timing is True:
             t3 = time.time()
