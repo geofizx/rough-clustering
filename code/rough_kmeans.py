@@ -3,36 +3,46 @@
 
 """
 @description
-An implementation of rough k-means clustering for multi-dimensional numerical features. This extends conventional k-means
-to rough set theory by inclusion of upper and lower approximations in both entity-cluster distance measures and
-cluster centroid computations.
+An implementation of rough k-means clustering for multi-dimensional
+numerical features. This extends conventional
+k-means to rough set theory by inclusion of upper and lower
+approximations in both entity-cluster distance measures and cluster
+centroid computations.
 
-See: Lingras and Peter, Applying Rough Set Concepts to Clustering, in G. Peters et al. (eds.), Rough Sets: Selected
-Methods and Applications in Management and Engineering, Advanced Information and Knowledge Processing,
-DOI 10.1007/978-1-4471-2760-4_2, Springer-Verlag London Limited, 2012.
+See: Lingras and Peter, Applying Rough Set Concepts to Clustering, in
+G. Peters et al. (eds.), Rough Sets: Selected Methods and Applications
+in Management and Engineering, Advanced Information and Knowledge
+Processing, DOI 10.1007/978-1-4471-2760-4_2, Springer-Verlag London
+Limited, 2012.
 
 @options
-        self.max_clusters = max_clusters	# Number of clusters to return
-        self.wght_lower = wght_lower        # Relative weight of lower approximation for each rough cluster centroid
-        self.wght_upper = wght_upper        # Relative weight of upper approximation to each rough cluster centroid
-        self.dist_threshold = None          # Threshold for clusters to be considered similar distances
-        self.p_param = p_param              # parameter for weighted distance centroid option below
-        self.weighted_distance = wght       # Option (True) to use alternative weighted distance centroid calculations
+    self.max_clusters = max_clusters # Number of clusters to return
+    self.wght_lower = wght_lower     # Rel. weight of lower approxs
+    self.wght_upper = wght_upper     # Rel. weight of upper approxs
+    self.dist_threshold = None       # Threshold for cluster similarity
+    self.p_param = p_param           # parameter for weighted distance
+                                       centroid option below
+    self.weighted_distance = wght    # Option (True) to use weighted
+                                       distance centroid calculations
 
 @notes
 Distance threshold option:
-    self.dist_threshold = 1.25 by default (entity assigned to all centroids within 25% of the optimal cluster distance)
-    if self.dist_threshold is set <=1.0 conventional kmeans clusters will be returned
+    self.dist_threshold = 1.25 by default (entity assigned to all
+    centroids within 25% of the optimal cluster distance)
+    if self.dist_threshold <=1.0 conventional kmeans clusters returned
 
-    The larger self.dist_threshold the more rough (entity overlap) will exist across all k clusters returned
+    The larger self.dist_threshold the more rough (entity overlap) will
+    exist across all k clusters returned
 
 Lower and Upper Approximation Weight options:
-    SUM(wght_lower,wght_upper) must equal 1.0, else it will be set to defaults on execution
+    SUM(wght_lower,wght_upper) must equal 1.0, else it will be set to
+    defaults on execution
 
     wght_lower=0.75 by default
     wght_upper=0.25 by default
 
-    The larger wght_lower is relative to wght_upper the more important cluster lower approximations will be and v.v
+    The larger wght_lower is relative to wght_upper the more important
+    cluster lower approximations will be and v.v
 
 @author Michael Tompkins
 @copyright 2016
@@ -48,17 +58,24 @@ from copy import deepcopy
 
 class RoughKMeans:
 
-    def __init__(self,input_data,max_clusters,wght_lower=0.75,wght_upper=0.25,threshold=1.25,p_param=1.0,wght=False):
+    def __init__(self,input_data,
+                 max_clusters,
+                 wght_lower=0.75,
+                 wght_upper=0.25,
+                 threshold=1.25,
+                 p_param=1.0,
+                 wght=False):
 
         # Rough clustering options
-        self.normalize = False              # Option to Z-score normalize features
+        self.normalize = False            # Option to Z-score normalize features
         self.max_clusters = max_clusters    # Number of clusters to return
-        self.dist_threshold = threshold     # <=1.0 Threshold for centroids to be deemed indiscernible (1.0 == Kmeans)
+        self.dist_threshold = threshold     # <=1.0 threshold for centroids indiscernibility
         self.tolerance = 1.0e-04            # Tolerance for stopping iterative clustering
-        self.wght_lower = wght_lower        # Relative weight of lower approximation for each rough cluster centroid
-        self.wght_upper = wght_upper        # Relative weight of upper approximation to each rough cluster centroid
+        self.previous_error = 1.0e+32       # Back storage of centroid error
+        self.wght_lower = wght_lower        # Rel. weight of lower approx for each cluster centroid
+        self.wght_upper = wght_upper        # Rel. weight of upper approx to each cluster centroid
         self.p_param = p_param              # parameter for weighted distance centroid option
-        self.weighted_distance = wght       # Option (True) to use alternative weighted distance centroid
+        self.weighted_distance = wght       # Option (True) to use alt. weighted distance centroid
 
         # Enforce wght_lower + wght_upper == 1.0
         if self.wght_lower + self.wght_upper > 1.0:
@@ -73,27 +90,31 @@ class RoughKMeans:
         self.data_length = len(self.data[self.feature_names[0]])
 
         # Rough clustering external vars
+        self.keylist = None                 # Ordered list of keys
+        self.tableau_lists = None           # List order of data keys for centroid arrays
         self.centroids = {}                 # Centroids for all returned clusters
-        self.cluster_list = {}              # Internal listing of membership for all candidate clusters
+        self.cluster_list = {}              # Internal listing of membership for all clusters
         self.distance = {}                  # Entity-cluster distances for all candidate clusters
-        self.clusters = None                # upper and lower approximation membership for all returned clusters
-        self.d_weights = {}                 # Weighting function for entities if self.weighted_distance = True
+        self.clusters = None                # upper and lower approx membership for all clusters
+        self.d_weights = {}                 # Weight func. for entities if weighted_distance = True
 
         # Overhead
         self.timing = True                  # Timing print statements flag
         self.debug = False                  # Debug flag for entire class print statements
-        self.debug_assign = False           # Debug flag for assign_cluster_upper_lower_approximation method
-        self.debug_dist = False             # Debug flag for get_entity_centroid_distances method
-        self.debug_update = False           # Debug flag for update_centroids method
+        self.debug_assign = False           # Debug flag assign_cluster_upper_lower_approximation()
+        self.debug_dist = False             # Debug flag get_entity_centroid_distances()
+        self.debug_update = False           # Debug flag update_centroids()
         self.small = 1.0e-04
         self.large = 1.0e+10
 
     def get_rough_clusters(self):
 
         """
-        Run iterative clustering solver for rough k-means and return max_cluster rough clusters
+        Run iterative clustering solver for rough k-means and return
+        max_cluster rough clusters
 
-        :return: self.centroids, self.assignments, self.upper_approximation, self.lower_approximation
+        :return: self.centroids, self.assignments, self.upper_approximation,
+        self.lower_approximation
         """
 
         # Transform data to nd-array for speed acceleration
@@ -103,7 +124,8 @@ class RoughKMeans:
         self.initialize_centroids()
 
         if self.dist_threshold <= 1.0:
-            warnings.warn("Rough distance threshold set <= 1.0 and will produce conventional k-means solution")
+            warnings.warn("Rough distance threshold set <= 1.0 and will produce conventional \
+            k-means solution")
 
         # Iterate until centroids convergence
         ct = 0
@@ -139,16 +161,17 @@ class RoughKMeans:
     def transform_data(self):
 
         """
-        Convert input data dictionary to float nd-array for accelerated clustering speed
+        Convert input data dictionary to float nd-array for
+        accelerated clustering speed
 
         :var self.data
         :return: self.data_array
         """
 
         t1 = time.time()
-
-        tableau_lists = [self.data[key][:] for key in self.data]
-        self.data_array = np.asfarray(tableau_lists).T
+        self.keylist = self.data.keys()
+        self.tableau_lists = [self.data[key][:] for key in self.data]
+        self.data_array = np.asfarray(self.tableau_lists).T
 
         # Normalize if requested
         if self.normalize is True:
@@ -166,7 +189,8 @@ class RoughKMeans:
     def initialize_centroids(self):
 
         """
-        Randomly select [self.max_clusters] initial entities as centroids and assign to self.centroids
+        Randomly select [self.max_clusters] initial entities as
+        centroids and assign to self.centroids
 
         :var self.max_clusters
         :var self.data
@@ -177,18 +201,21 @@ class RoughKMeans:
 
         t1 = time.time()
 
-        # Select max cluster random entities from input and assign as initial cluster centroids
+        # Select max cluster random entities from input and assign as
+        # initial cluster centroids
         candidates = np.random.permutation(self.data_length)[0:self.max_clusters]
 
         if self.debug is True:
             print "Candidates",candidates,self.feature_names,self.data
 
-        #self.centroids = {str(k): {v: self.data[v][candidates[k]] for v in self.feature_names} for
+        # self.centroids = {str(k): {v: self.data[v][candidates[k]] for v in self.feature_names} for
         #                  k in range(self.max_clusters)}
 
-        self.centroids = {str(k): self.data_array[candidates[k],:] for k in range(self.max_clusters)}
+        self.centroids = {str(k): self.data_array[candidates[k], :] for k in
+                          range(self.max_clusters)}
 
         if self.timing is True:
+            print 'Max Clusters',self.max_clusters
             t3 = time.time()
             print "initialize_centroids Time",t3-t1
 
@@ -208,10 +235,11 @@ class RoughKMeans:
 
         t1 = time.time()
 
-        # centroid_error = np.sum([[abs(self.centroids[k][val] - previous_centroids[k][val]) for k in self.centroids]
-        #                           for val in self.feature_names])
+        # centroid_error = np.sum([[abs(self.centroids[k][val] - previous_centroids[k][val])
+        #                          for k in self.centroids] for val in self.feature_names])
 
-        centroid_error = np.sum([np.linalg.norm(self.centroids[k] - previous_centroids[k]) for k in self.centroids])
+        centroid_error = np.sum([np.linalg.norm(self.centroids[k] - previous_centroids[k])
+                                 for k in self.centroids])
 
         if self.timing is True:
             t3 = time.time()
@@ -220,21 +248,28 @@ class RoughKMeans:
         if self.debug is True:
             print "Centroid change", centroid_error
 
-        if centroid_error <= self.tolerance:
+        if centroid_error <= self.tolerance or np.abs(self.previous_error - centroid_error) \
+                <= self.tolerance:
             return True
         else:
+            self.previous_error = centroid_error.copy()
             return False
 
     def update_centroids_weighted_distance(self):
 
         """
-        Update rough centroids for all candidate clusters given their upper/lower approximations set membership
-        plus a weighted distance function based on distance of each entity to the given cluster centroid
+        Update rough centroids for all candidate clusters given their
+        upper/lower approximations set membership plus a weighted
+        distance function based on distance of each entity to the given
+        cluster centroid
 
         Cluster centroids updated/modified for three cases:
-            if sets {lower approx} == {upper approx}, return conventional k-means cluster centroids
-            elif set {lower approx] is empty and set {upper approx} is not empty, return upper-lower centroids
-            else return weighted mean of lower approx centroids and upper-lower centroids
+            if sets {lower approx} == {upper approx}, return
+                conventional k-means cluster centroids
+            elif set {lower approx] is empty and set {upper approx}
+                is not empty, return upper-lower centroids
+            else return weighted mean of lower approx centroids and
+                upper-lower centroids
 
         :var self.data_array
         :var self.wght_lower
@@ -249,12 +284,14 @@ class RoughKMeans:
 
         for k in self.clusters:
 
-            if len(self.clusters[k]["lower"]) == len(self.clusters[k]["upper"]) and len(self.clusters[k]["lower"]) != 0:
+            if len(self.clusters[k]["lower"]) == len(self.clusters[k]["upper"]) and \
+                            len(self.clusters[k]["lower"]) != 0:
                 # Get lower approximation vectors and distance weights
                 weights = np.asarray([self.d_weights[k][str(l)] for l in self.clusters[k]["lower"]])
                 weights /= np.sum(weights)
                 self.centroids[str(k)] = \
-                    np.sum([weights[m] * self.data_array[l,:] for m,l in enumerate(self.clusters[k]["lower"])], axis=0)
+                    np.sum([weights[m] * self.data_array[l,:]
+                            for m,l in enumerate(self.clusters[k]["lower"])], axis=0)
 
             elif len(self.clusters[k]["lower"]) == 0 and len(self.clusters[k]["upper"]) != 0:
                 # Get upper approximation vectors
@@ -262,22 +299,25 @@ class RoughKMeans:
                     [self.d_weights[k][str(l)] for l in self.clusters[k]["upper"]])
                 weights /= np.sum(weights)
                 self.centroids[str(k)] = \
-                    np.sum([weights[m] * self.data_array[l, :] for m,l in enumerate(self.clusters[k]["upper"])], axis=0)
+                    np.sum([weights[m] * self.data_array[l, :]
+                            for m,l in enumerate(self.clusters[k]["upper"])], axis=0)
 
             else:
                 # Get both upper-exclusive and lower approximation sets
-                exclusive_set = list(set(self.clusters[k]["upper"]).difference(set(self.clusters[k]["lower"])))
+                exclusive_set = \
+                    list(set(self.clusters[k]["upper"]).difference(set(self.clusters[k]["lower"])))
                 weights1 = np.asarray(
-                    [self.d_weights[k][str(l)] * self.data_array[l, :] for l in self.clusters[k]["lower"]])
+                    [self.d_weights[k][str(l)] * self.data_array[l, :]
+                     for l in self.clusters[k]["lower"]])
                 weights1 /= np.sum(weights1)
                 weights2 = np.asarray(
                     [self.d_weights[k][str(l)] * self.data_array[l, :] for l in exclusive_set])
                 weights2 /= np.sum(weights2)
                 self.centroids[str(k)] = \
                     self.wght_lower * np.sum([weights1[m] * self.data_array[l, :]
-                                              for m,l in enumerate(self.clusters[k]["lower"])], axis=0) + \
-                    self.wght_upper * np.sum([weights2[m] * self.data_array[l, :]
-                                            for m,l in enumerate(exclusive_set)], axis=0)
+                                              for m,l in enumerate(self.clusters[k]["lower"])], axis=0) \
+                    + self.wght_upper * np.sum([weights2[m] * self.data_array[l, :]
+                                                for m,l in enumerate(exclusive_set)], axis=0)
 
             if self.debug_update is True:
                 print """###Cluster""", k, self.clusters[k]["lower"], self.clusters[k]["upper"]
@@ -291,12 +331,16 @@ class RoughKMeans:
     def update_centroids(self):
 
         """
-        Update rough centroids for all candidate clusters given their upper/lower approximations set membership
+        Update rough centroids for all candidate clusters given their
+        upper/lower approximations set membership
 
         Cluster centroids updated/modified for three cases:
-            if sets {lower approx} == {upper approx}, return conventional k-means cluster centroids
-            elif set {lower approx] is empty and set {upper approx} is not empty, return upper-lower centroids
-            else return weighted mean of lower approx centroids and upper-lower centroids
+            if sets {lower approx} == {upper approx}, return
+                conventional k-means cluster centroids
+            elif set {lower approx] is empty and set {upper approx}
+                is not empty, return upper-lower centroids
+            else return weighted mean of lower approx centroids and
+                upper-lower centroids
 
         :var self.data_array
         :var self.wght_lower
@@ -324,9 +368,11 @@ class RoughKMeans:
                 # Get both upper-exclusive and lower approximation sets
                 # upper = self.data_array[self.clusters[k]["upper"], :]
                 lower = self.data_array[self.clusters[k]["lower"], :]
-                exclusive_set = list(set(self.clusters[k]["upper"]).difference(set(self.clusters[k]["lower"])))
+                exclusive_set = \
+                    list(set(self.clusters[k]["upper"]).difference(set(self.clusters[k]["lower"])))
                 boundary = self.data_array[exclusive_set, :]
-                self.centroids[str(k)] = self.wght_lower*np.mean(lower,axis=0) + self.wght_upper*np.mean(boundary,axis=0)
+                self.centroids[str(k)] = \
+                    self.wght_lower*np.mean(lower,axis=0) + self.wght_upper*np.mean(boundary,axis=0)
 
             if self.debug_update is True:
                 print """###Cluster""", k, self.clusters[k]["lower"], self.clusters[k]["upper"]
@@ -340,15 +386,16 @@ class RoughKMeans:
     def assign_cluster_upper_lower_approximation(self):
 
         """
-        Compute entity-to-cluster optimal assignments + upper/lower approximations for all current clusters
+        Compute entity-to-cluster optimal assignments +
+        upper/lower approximations for all current clusters
 
         :var self.distance
         :var self.distance_threshold
         :var self.cluster_list
         :var self.max_clusters
         :var self.data_length
-        :return: self.clusters[clusters]["upper"] : upper approximation for each candidate cluster
-        :return: self.clusters[clusters]["lower"] : lower approximation for each candidate cluster
+        :return: self.clusters[clusters]["upper"] : upper approx.
+        :return: self.clusters[clusters]["lower"] : lower approx.
         """
 
         t1 = time.time()
@@ -361,10 +408,12 @@ class RoughKMeans:
         for k in range(0, self.data_length):
             v_clust = self.cluster_list[str(k)]     # Current entity nearest cluster
 
-            # Compile all clusters for each entity that are within self.threshold distance of best entity cluster
-            T = {j: self.distance[str(k)][j] / np.max([self.distance[str(k)][v_clust],self.small])
+            # Compile all clusters for each entity that are within
+            # self.threshold distance of best entity cluster
+            T = {j: self.distance[str(k)][j] / np.max([self.distance[str(k)][v_clust], self.small])
                  for j in self.distance[str(k)] if
-                 (self.distance[str(k)][j] / np.max([self.distance[str(k)][v_clust],self.small]) <= self.dist_threshold)
+                 (self.distance[str(k)][j] / np.max([self.distance[str(k)][v_clust], self.small])
+                  <= self.dist_threshold)
                  and (v_clust != j)}
 
             # Assign entity to lower and upper approximations of all clusters as needed
@@ -395,13 +444,14 @@ class RoughKMeans:
     def get_entity_centroid_distances(self):
 
         """
-        Compute entity-cluster distances and find nearest cluster for each entity and assign for all entities
+        Compute entity-cluster distances and find nearest cluster
+        for each entity and assign for all entities
 
-        :var self.data_array : numpy nd-array of all features for all entities
-        :var self.centroids : numpy nd-array of all centroid features for all candidate clusters
+        :var self.data_array : nd-array of all features for all entities
+        :var self.centroids : nd-array of all cluster centroids
         :var self.max_clusters
-        :return: self.distance : centroid-entity distance vectors for all candidate clusters
-        :return self.cluster_list : best fit cluster - entity assignment lists
+        :return: self.distance : centroid-entity distance vectors
+        :return self.cluster_list : best fit cluster-entity assignment
         """
 
         t1 = time.time()
@@ -443,7 +493,7 @@ class RoughKMeans:
 if __name__ == "__main__":
 
     """
-    For class-level tests see /tests/rough_kmeans_tests.py
+    For class-level rough_clustering_tests see /rough_clustering_tests/rough_kmeans_tests.py
     """
 
     # Class Unit test
@@ -451,4 +501,3 @@ if __name__ == "__main__":
     clstr = RoughKMeans(data,2,wght_lower=0.75,wght_upper=0.25,threshold=1.0,p_param=1.0,wght=True)
     clstr.get_rough_clusters()
     print "Final Rough k-means",clstr.cluster_list
-
